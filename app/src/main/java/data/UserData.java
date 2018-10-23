@@ -1,11 +1,15 @@
 package data;
 
+import java.util.Date;
+
 public class UserData {
 
     String userName="";
     String password="";
     String domain="";
     short port=0;
+    String sid="";
+    Date expires;
 
     /**
      * Constructor por defecto con los valores de labtelema.ujaen.es:80

@@ -1,5 +1,7 @@
 package es.ujaen.miaula;
 
+import android.app.Activity;
+import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -8,6 +10,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLConnection;
 
 import data.UserData;
 
@@ -48,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
         TextView tuser = findViewById(R.id.main_apptitle);
         tuser.setText(title);
 
+
     }
 
     @Override
@@ -60,7 +75,57 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
     @Override
     public void onFragmentInteraction(UserData udata) {
 
-        this.ud.setDomain(udata.getDomain());
-        changetitle(ud.getDomain());
+        ConnectTask task = new ConnectTask();
+        task.execute(udata);
+
+
+    }
+
+
+    public String readServer(UserData udata){
+        try {
+            //URL url = new URL(domain);
+            //HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            //DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
+            Socket socket = new Socket(udata.getDomain(),udata.getPort());
+            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataOutputStream.writeUTF("GET /~jccuevas/ssmm/login.php?user=user1&pass=12341234 HTTP/1.1\r\nhost:www4.ujaen.es\r\n\r\n");
+            dataOutputStream.flush();
+
+            StringBuilder sb = new StringBuilder();
+            BufferedReader bis;
+            bis = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String line = "";
+            while((line = bis.readLine())!=null) {
+                sb.append(line);
+            }
+            final String datos= sb.toString();
+
+
+            return datos;
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    class ConnectTask extends AsyncTask<UserData,Integer,String>{
+
+        @Override
+        protected String doInBackground(UserData... userData) {
+
+            return readServer(userData[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
+        }
     }
 }
