@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Practica 1</string>
+    <string name="main_description">Mobile Services</string>
+    <string name="login_pass">Password</string>
+    <string name="fragment_button_connect">Login</string>
+    <string name="fragment_auth_user">User</string>
+</resources>
