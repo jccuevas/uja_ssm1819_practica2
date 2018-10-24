@@ -62,4 +62,8 @@ public class UserData {
     public void setPort(short port) {
         this.port = port;
     }
+
+    public String getPassword() {
+        return password;
+    }
 }
