@@ -7,7 +7,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,7 +37,11 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //TODO Añadir algo aquí
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+
         Log.d("ARRANCANDO","La aplicación móvil se está iniciando");
         FragmentManager fm = getSupportFragmentManager();
         Fragment temp = fm.findFragmentById(R.id.main_container);
@@ -66,6 +72,13 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
         tuser.setText(title);
 
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.main_menu,menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -121,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
     // Given a URL, establishes an HttpUrlConnection and retrieves
     // the web page content as a InputStream, which it returns as
     // a string.
-    private String downloadUrl(String myurl,String user,String pass) throws IOException {
+    private String downloadUrl(String domain,String user,String pass) throws IOException {
         InputStream is = null;
         String result = "";
 
@@ -129,10 +142,11 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
         try {
             String contentAsString="";
             String tempString="";
-            URL url = new URL(myurl);
-            System.out.println("Abriendo conexión: " + url.getHost()
-                    + " puerto=" + url.getPort());
-            conn = (HttpURLConnection) url.openConnection();
+            String url = "http://"+domain+"/~jccuevas/ssmm/autentica.php"+"?user="+user+"&pass="+pass;
+            URL service_url = new URL(url);
+            System.out.println("Abriendo conexión: " + service_url.getHost()
+                    + " puerto=" + service_url.getPort());
+            conn = (HttpURLConnection) service_url.openConnection();
             conn.setReadTimeout(10000 /* milliseconds */);
             conn.setConnectTimeout(15000 /* milliseconds */);
             conn.setRequestMethod("GET");
