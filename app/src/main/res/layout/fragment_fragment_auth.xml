@@ -30,7 +30,8 @@
                 android:layout_marginStart="8dp"
                 android:ems="10"
                 android:hint="@string/login_hint_user"
-                android:inputType="text" />
+                android:inputType="text"
+                android:text="@string/fragment_auth_user_default" />
 
         </TableRow>
 
@@ -54,7 +55,8 @@
                 android:layout_marginTop="8dp"
                 android:ems="10"
                 android:hint="@string/login_hint_pass"
-                android:inputType="textPassword" />
+                android:inputType="textPassword"
+                android:text="@string/fragment_auth_pass_default" />
         </TableRow>
 
         <TableRow

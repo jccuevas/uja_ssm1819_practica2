@@ -25,6 +25,11 @@
     <string name="main_connecting">Conectando...</string>
     <string name="main_connected">Conectado</string>
     <string name="main_progress">Progreso</string>
-    <string name="login_default_ip"><![CDATA[www4.ujaen.es/~jccuevas/ssmm/autentica.php?user=user1&pass=12345]]></string>
+    <string name="login_default_ip">labtelema.ujaen.es</string>
     <string name="login_default_port">80</string>
+    <string name="fragment_auth_doing">Autenticando:</string>
+    <string name="fragment_auth_user_default">user1</string>
+    <string name="fragment_auth_pass_default">12345</string>
+    <string name="auth_correct">Autenticación correcta</string>
+    <string name="auth_error">Error en la autenticación</string>
 </resources>

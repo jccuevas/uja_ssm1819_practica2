@@ -4,12 +4,28 @@ import java.util.Date;
 
 public class UserData {
 
-    String userName="";
-    String password="";
-    String domain="";
-    short port=0;
-    String sid="";
-    Date expires;
+    private String userName="";
+    private String password="";
+    private String domain="";
+    private short port=0;
+    private String sid="";
+    private String expires;
+
+    public String getSid() {
+        return sid;
+    }
+
+    public void setSid(String sid) {
+        this.sid = sid;
+    }
+
+    public String getExpires() {
+        return expires;
+    }
+
+    public void setExpires(String expires) {
+        this.expires = expires;
+    }
 
     /**
      * Constructor por defecto con los valores de labtelema.ujaen.es:80
@@ -30,7 +46,7 @@ public class UserData {
      */
     public UserData(String user,String pass,String domain,short port){
         this.userName=user;
-        this.password=password;
+        this.password=pass;
         this.domain=domain;
         this.port=port;
     }

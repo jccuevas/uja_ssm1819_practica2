@@ -18,7 +18,10 @@ import android.widget.Toast;
 public class ServiceActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    //Parametros del Intent de la actividad
     public static final String PARAMETER_USER = "user";
+    public static final String PARAMETER_SID = "sid";
+    public static final String PARAMETER_EXPIRES = "expired";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
