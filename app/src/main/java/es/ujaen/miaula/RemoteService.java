@@ -85,14 +85,24 @@ public class RemoteService extends Service {
         }
     }
 
-    public class UserLogin implements Runnable {
+    public interface Protocolo{
+        public UserData descarga(UserData userData);
+
+
+    }
+    public class UserLogin implements Runnable, Protocolo{
         private static final String RESOURCE = "/ssmm/autentica.php";
 
         private static final int CODE_HTTP_OK = 200;
 
         @Override
         public void run() {
-            Looper.prepare();
+            userData = descarga(userData);
+
+        }
+
+        @Override
+        public UserData descarga(UserData userData) {
             UserData result = null;
             if (userData != null) {
 
@@ -143,9 +153,12 @@ public class RemoteService extends Service {
                     ioex.printStackTrace();
                     enviarMensaje(2,"URL FALLO EN LA CONEXIÓN");
 
+                }finally {
+                    return result;
                 }
 
             }
+            return result;
         }
     }
 }
