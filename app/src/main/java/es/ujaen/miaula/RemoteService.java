@@ -37,13 +37,13 @@ public class RemoteService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(final Intent intent, int flags, int startId) {
 
         String user= intent.getExtras().getString(PARAM_USER);
         String pass= intent.getExtras().getString(PARAM_PASS);
         String domain = intent.getExtras().getString(PARAM_DOMAIN);
         short port = intent.getExtras().getShort(PARAM_PORT);
-        userData=new UserData(user,pass,domain,(short)80);
+        userData=new UserData(user,pass,domain,port);
 
         handler = new Handler(Looper.getMainLooper()) {
             @Override
@@ -53,6 +53,8 @@ public class RemoteService extends Service {
                     case 1:
                         String message = inputMessage.getData().getString(RemoteService.MESSAGE_SID);
                         Toast.makeText(getApplicationContext(),"HANDLER: "+message,Toast.LENGTH_SHORT).show();
+                        //Intent serviceractivity = new Intent(getApplicationContext(),ServiceActivity.class);
+                        //startActivity(intent);
                         break;
                     default:
                         super.handleMessage(inputMessage);
@@ -113,6 +115,7 @@ public class RemoteService extends Service {
                                 if (parts.length == 2) {
                                     if (parts[1].startsWith("EXPIRES=")) {
                                         result = UserData.processSession(userData, parts[0], parts[1]);
+                                        Thread.sleep(10000);
                                         enviarMensaje(result.getUserName() + " " + result.getSid());
                                     }
                                 }
@@ -129,8 +132,9 @@ public class RemoteService extends Service {
                 } catch (IOException ioex) {
                     ioex.printStackTrace();
 
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-
 
             }
         }
