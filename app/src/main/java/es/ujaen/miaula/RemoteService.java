@@ -58,6 +58,8 @@ public class RemoteService extends Service {
 //                    case 1:
 //                        String message = inputMessage.getData().getString(RemoteService.MESSAGE_SID);
 //                        Toast.makeText(getApplicationContext(),"HANDLER: "+message,Toast.LENGTH_SHORT).show();
+//                        Intent serviceractivity = new Intent(getApplicationContext(),ServiceActivity.class);
+//                        startActivity(serviceractivity);
 //                        break;
 //                    default:
 //                        super.handleMessage(inputMessage);

@@ -53,7 +53,8 @@ public class MainActivity extends AppCompatActivity implements ItemFragment.OnLi
     private UserData ud = null;
     ConnectTask mTask = null;
 
-static Handler handler;
+    static Handler handler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,17 +69,15 @@ static Handler handler;
             public void handleMessage(Message inputMessage) {
                 String message = inputMessage.getData().getString(RemoteService.MESSAGE_SID);
 
-                switch (inputMessage.what){
+                switch (inputMessage.what) {
                     case 1:
 
-                        Toast.makeText(getApplicationContext(),"HANDLER: "+message,Toast.LENGTH_SHORT).show();
-                        //Intent serviceractivity = new Intent(getApplicationContext(),ServiceActivity.class);
-                        //startActivity(intent);
+                        Toast.makeText(getApplicationContext(), R.string.LOGIN_CORRECT, Toast.LENGTH_SHORT).show();
+                        Intent serviceractivity = new Intent(getApplicationContext(), ServiceActivity.class);
+                        startActivity(serviceractivity);
                         break;
                     case 2:
-                         Toast.makeText(getApplicationContext(),"ERROR: "+message,Toast.LENGTH_SHORT).show();
-                        //Intent serviceractivity = new Intent(getApplicationContext(),ServiceActivity.class);
-                        //startActivity(intent);
+                        Toast.makeText(getApplicationContext(), "ERROR: " + message, Toast.LENGTH_SHORT).show();
                         break;
                     default:
                         super.handleMessage(inputMessage);
@@ -158,12 +157,12 @@ static Handler handler;
     @Override
     public void onFragmentInteraction(UserData udata) {
 
-        Intent service = new Intent(this,RemoteService.class);
-        service.putExtra(RemoteService.PARAM_USER,udata.getUserName());
-        service.putExtra(RemoteService.PARAM_PASS,udata.getPassword());
-        service.putExtra(RemoteService.PARAM_DOMAIN,udata.getDomain());
-        service.putExtra(RemoteService.PARAM_PORT,udata.getPort());
-        service.putExtra("handler",new Messenger(handler));
+        Intent service = new Intent(this, RemoteService.class);
+        service.putExtra(RemoteService.PARAM_USER, udata.getUserName());
+        service.putExtra(RemoteService.PARAM_PASS, udata.getPassword());
+        service.putExtra(RemoteService.PARAM_DOMAIN, udata.getDomain());
+        service.putExtra(RemoteService.PARAM_PORT, udata.getPort());
+        service.putExtra("handler", new Messenger(handler));
         startService(service);
 //        Autentica auth = new Autentica();
 //        auth.execute(udata);
