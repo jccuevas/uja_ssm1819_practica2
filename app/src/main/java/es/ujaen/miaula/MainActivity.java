@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
                                 String parts[]=line.split("&");
                                 if(parts.length==2){
                                     if(parts[1].startsWith("EXPIRES=")){
-                                        result = processSession(data,parts[0],parts[1]);
+                                        result = UserData.processSession(data,parts[0],parts[1]);
                                     }
                                 }
                             }
@@ -203,22 +203,7 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
 
         }
 
-        /**
-         *
-         * @param input the data of the current user
-         * @param session string with format SESSION-ID=xxxxx
-         * @param expires string with forma EXPIRES=xxxx
-         * @return updated user data
-         */
-        protected UserData processSession(UserData input,String session,String expires){
-            session = session.substring(session.indexOf("=")+1,session.length());
-            expires = expires.substring(expires.indexOf("=")+1,expires.length());
-            input.setSid(session);
 
-            input.setExpires(expires);
-
-            return input;
-        }
 
     }
 

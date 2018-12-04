@@ -22,7 +22,12 @@
         <activity
             android:name=".ServiceActivity"
             android:label="@string/title_activity_service"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <service
+            android:name=".RemoteService"
+            android:enabled="true"
+            android:exported="false"></service>
     </application>
 
 </manifest>

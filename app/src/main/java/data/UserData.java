@@ -82,4 +82,21 @@ public class UserData {
     public String getPassword() {
         return password;
     }
+      /**
+     *
+     * @param input the data of the current user
+     * @param session string with format SESSION-ID=xxxxx
+     * @param expires string with forma EXPIRES=xxxx
+     * @return updated user data
+     */
+
+      public static UserData processSession(UserData input,String session,String expires){
+        session = session.substring(session.indexOf("=")+1,session.length());
+        expires = expires.substring(expires.indexOf("=")+1,expires.length());
+        input.setSid(session);
+
+        input.setExpires(expires);
+
+        return input;
+    }
 }
