@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,10 +19,14 @@ import java.net.URL;
 import data.UserData;
 
 public class RemoteService extends Service {
+    public static final String MESSAGE_SID = "message";
     UserData userData;
-    Handler handler=null;
-    public RemoteService(Handler handler) {
-        this.handler=handler;
+    Handler handler = null;
+    public static final String PARAM_USER = "user";
+    public static final String PARAM_PASS = "pass";
+    public static final String PARAM_DOMAIN = "domain";
+    public static final String PARAM_PORT = "port";
+    public RemoteService() {
     }
 
 
@@ -33,8 +39,28 @@ public class RemoteService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        String user= intent.getExtras().getString(PARAM_USER);
+        String pass= intent.getExtras().getString(PARAM_PASS);
+        String domain = intent.getExtras().getString(PARAM_DOMAIN);
+        short port = intent.getExtras().getShort(PARAM_PORT);
+        userData=new UserData(user,pass,domain,(short)80);
 
+        handler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message inputMessage) {
 
+                switch (inputMessage.what){
+                    case 1:
+                        String message = inputMessage.getData().getString(RemoteService.MESSAGE_SID);
+                        Toast.makeText(getApplicationContext(),"HANDLER: "+message,Toast.LENGTH_SHORT).show();
+                        break;
+                    default:
+                        super.handleMessage(inputMessage);
+                }
+
+            }
+        };
+        new Thread(new UserLogin()).start();
         return START_NOT_STICKY;
     }
 
@@ -42,30 +68,30 @@ public class RemoteService extends Service {
         if (handler != null) {
             Message mensaje = Message.obtain(handler, 1);
             Bundle datosmensaje = new Bundle();
-            datosmensaje.putString("mensaje", datos);
+            datosmensaje.putString(MESSAGE_SID, datos);
 
+            mensaje.setData(datosmensaje);
             mensaje.sendToTarget();
         }
     }
 
-    public class UserLogin implements Runnable{
+    public class UserLogin implements Runnable {
         private static final String RESOURCE = "/ssmm/autentica.php";
-        private static final String PARAM_USER = "user";
-        private static final String PARAM_PASS = "pass";
+
         private static final int CODE_HTTP_OK = 200;
 
         @Override
         public void run() {
 
-            UserData result=null;
+            UserData result = null;
             if (userData != null) {
 
 
                 //TODO hacer la conexión y la autenticación
 
                 String service = "http://" + userData.getDomain() + ":" +
-                        userData.getPort() + RESOURCE + "?" +PARAM_USER+"="+userData.getUserName()+"&"+
-                        PARAM_PASS+"="+userData.getPassword();
+                        userData.getPort() + RESOURCE + "?" + PARAM_USER + "=" + userData.getUserName() + "&" +
+                        PARAM_PASS + "=" + userData.getPassword();
 
                 try {
                     URL urlService = new URL(service);
@@ -76,18 +102,18 @@ public class RemoteService extends Service {
                     connection.setDoInput(true);
                     connection.connect();
 
-                    int code= connection.getResponseCode();
-                    if(code==CODE_HTTP_OK){
+                    int code = connection.getResponseCode();
+                    if (code == CODE_HTTP_OK) {
                         InputStreamReader is = new InputStreamReader(connection.getInputStream());
                         BufferedReader br = new BufferedReader(is);
-                        String line="";
-                        while((line=br.readLine())!=null){
-                            if(line.startsWith("SESSION-ID=")){
-                                String parts[]=line.split("&");
-                                if(parts.length==2){
-                                    if(parts[1].startsWith("EXPIRES=")){
-                                        result = UserData.processSession(userData,parts[0],parts[1]);
-                                        enviarMensaje(result.getUserName()+" "+result.getSid());
+                        String line = "";
+                        while ((line = br.readLine()) != null) {
+                            if (line.startsWith("SESSION-ID=")) {
+                                String parts[] = line.split("&");
+                                if (parts.length == 2) {
+                                    if (parts[1].startsWith("EXPIRES=")) {
+                                        result = UserData.processSession(userData, parts[0], parts[1]);
+                                        enviarMensaje(result.getUserName() + " " + result.getSid());
                                     }
                                 }
                             }
@@ -100,11 +126,10 @@ public class RemoteService extends Service {
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
 
-                } catch (IOException ioex){
+                } catch (IOException ioex) {
                     ioex.printStackTrace();
 
                 }
-
 
 
             }

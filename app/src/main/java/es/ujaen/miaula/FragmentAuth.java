@@ -11,6 +11,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.Date;
+
+import data.AccessLog;
 import data.UserData;
 
 
@@ -98,7 +101,7 @@ public class FragmentAuth extends Fragment {
                 userData = new UserData(s_user, s_pass, s_domain, temp);
                 Toast.makeText(getActivity(), getString(R.string.fragment_auth_doing) +s_user + " " + s_pass + " " + s_domain + " " + s_port, Toast.LENGTH_LONG).show();
 
-//                Intent intent = new Intent(getActivity(),ServiceActivity.class);
+                  Intent intent = new Intent(getActivity(),ServiceActivity.class);
 //                intent.putExtra(ServiceActivity.PARAMETER_USER,s_user);
 //                intent.putExtra("pass",s_pass);
 //                intent.putExtra("domain",s_domain);

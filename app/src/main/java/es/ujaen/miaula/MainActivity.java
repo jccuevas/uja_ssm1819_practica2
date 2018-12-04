@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -12,6 +15,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,11 +32,15 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.DateFormat;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import data.AccessLog;
 import data.Preferences;
 import data.UserData;
 
-public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements ItemFragment.OnListFragmentInteractionListener, FragmentAuth.OnFragmentInteractionListener {
 
     public static final String PREFS_PORT = "port";
     private static final String DEBUG_TAG = "HTTP";
@@ -44,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
     private UserData ud = null;
     ConnectTask mTask = null;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+
 
 
         Log.d("ARRANCANDO", "La aplicación móvil se está iniciando");
@@ -65,11 +76,24 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
             Toast.makeText(this, getString(R.string.mainactivity_fragmentepresent), Toast.LENGTH_SHORT).show();
 
         SharedPreferences sf = getPreferences(MODE_PRIVATE);
-        String nombre = sf.getString("USER","");
-        String expires = sf.getString("EXPIRES","");
-        if(nombre!="" && expires!=""){
+        String nombre = sf.getString("USER", "");
+        String expires = sf.getString("EXPIRES", "");
+        String sid = sf.getString("SID", "");
+        if (nombre != "" && expires != "") {
             //Control de sesión
-            Toast.makeText(this,"Bienvenido "+nombre, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Bienvenido " + nombre, Toast.LENGTH_LONG).show();
+            SimpleDateFormat sdf = new SimpleDateFormat("y-M-d-H-m-s");
+            Date expirationDate = sdf.parse(expires, new ParsePosition(0));
+            Date instant = new Date(System.currentTimeMillis());
+            if (expirationDate.getTime() > instant.getTime()) {
+                //Autenticar de manera transparente
+                Intent intent = new Intent(this, ServiceActivity.class);
+                intent.putExtra(ServiceActivity.PARAMETER_USER, nombre);
+                intent.putExtra(ServiceActivity.PARAMETER_EXPIRES, expires);
+                intent.putExtra(ServiceActivity.PARAMETER_SID, sid);
+                startActivity(intent);
+
+            }
             //comprobar si expires > momento actual
             //Si es mayor -> abro actividad (sesión válida)
             // ----> startActivity()
@@ -80,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
     }
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
@@ -88,15 +111,50 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
         return super.onCreateOptionsMenu(menu);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+
+            case R.id.action_log:
+                FragmentManager fm = getSupportFragmentManager();
+                FragmentTransaction ft = fm.beginTransaction();
+                Fragment temp = fm.findFragmentById(R.id.main_container);
+                if (temp == null) {
+                    ft.remove(temp);
+                }
+                ft.add(R.id.main_container, ItemFragment.newInstance(1), "log");
+                ft.addToBackStack("log");
+                ft.commit();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     @Override
     public void onFragmentInteraction(UserData udata) {
 
-        Autentica auth = new Autentica();
-        auth.execute(udata);
+        Intent service = new Intent(this,RemoteService.class);
+        service.putExtra(RemoteService.PARAM_USER,udata.getUserName());
+        service.putExtra(RemoteService.PARAM_PASS,udata.getPassword());
+        service.putExtra(RemoteService.PARAM_DOMAIN,udata.getDomain());
+        service.putExtra(RemoteService.PARAM_PORT,udata.getPort());
+        startService(service);
+//        Autentica auth = new Autentica();
+//        auth.execute(udata);
 
 //        Preferences.saveCredentials(this,udata);
 
+
+    }
+
+    @Override
+    public void onListFragmentInteraction(String item) {
+
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
 
     }
 
@@ -110,15 +168,15 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
         @Override
         protected UserData doInBackground(UserData... userData) {
             UserData data;
-            UserData result=null;
+            UserData result = null;
             if (userData != null) {
                 data = userData[0];
 
                 //TODO hacer la conexión y la autenticación
 
                 String service = "http://" + data.getDomain() + ":" +
-                        data.getPort() + RESOURCE + "?" +PARAM_USER+"="+data.getUserName()+"&"+
-                        PARAM_PASS+"="+data.getPassword();
+                        data.getPort() + RESOURCE + "?" + PARAM_USER + "=" + data.getUserName() + "&" +
+                        PARAM_PASS + "=" + data.getPassword();
 
                 try {
                     URL urlService = new URL(service);
@@ -129,17 +187,17 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
                     connection.setDoInput(true);
                     connection.connect();
 
-                    int code= connection.getResponseCode();
-                    if(code==CODE_HTTP_OK){
+                    int code = connection.getResponseCode();
+                    if (code == CODE_HTTP_OK) {
                         InputStreamReader is = new InputStreamReader(connection.getInputStream());
                         BufferedReader br = new BufferedReader(is);
-                        String line="";
-                        while((line=br.readLine())!=null){
-                            if(line.startsWith("SESSION-ID=")){
-                                String parts[]=line.split("&");
-                                if(parts.length==2){
-                                    if(parts[1].startsWith("EXPIRES=")){
-                                        result = UserData.processSession(data,parts[0],parts[1]);
+                        String line = "";
+                        while ((line = br.readLine()) != null) {
+                            if (line.startsWith("SESSION-ID=")) {
+                                String parts[] = line.split("&");
+                                if (parts.length == 2) {
+                                    if (parts[1].startsWith("EXPIRES=")) {
+                                        result = UserData.processSession(data, parts[0], parts[1]);
                                     }
                                 }
                             }
@@ -152,14 +210,12 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
 
-                } catch (IOException ioex){
+                } catch (IOException ioex) {
                     ioex.printStackTrace();
 
-                }
-                finally {
+                } finally {
                     return result;
                 }
-
 
 
             } else
@@ -169,16 +225,16 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
         @Override
         protected void onPostExecute(UserData userData) {
             super.onPostExecute(userData);
-            if(userData!=null){
+            if (userData != null) {
 
-                Toast.makeText(getApplicationContext(),R.string.auth_correct,Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), R.string.auth_correct, Toast.LENGTH_LONG).show();
 
                 SharedPreferences sp = getPreferences(MODE_PRIVATE);
                 //SharedPreferences sp = getSharedPreferences(userData.getUserName(),MODE_PRIVATE);
-                SharedPreferences.Editor editor= sp.edit();
-                editor.putString("USER",userData.getUserName());
-                editor.putString("SID",userData.getSid());
-                editor.putString("EXPIRES",userData.getExpires());
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putString("USER", userData.getUserName());
+                editor.putString("SID", userData.getSid());
+                editor.putString("EXPIRES", userData.getExpires());
                 editor.commit();
 
                 //SharedPreferences def = getPreferences(MODE_PRIVATE);
@@ -186,23 +242,26 @@ public class MainActivity extends AppCompatActivity implements FragmentAuth.OnFr
                 //edit2.putString("LAST_USER",userData.getUserName());
                 //edit2.commit();
 
-                Intent intent = new Intent(getApplicationContext(),ServiceActivity.class);
-                intent.putExtra(ServiceActivity.PARAMETER_USER,userData.getUserName());
-                intent.putExtra(ServiceActivity.PARAMETER_SID,userData.getSid());
-                intent.putExtra(ServiceActivity.PARAMETER_EXPIRES,userData.getExpires());
+                AccessLog.addRecord(getApplicationContext(), new Date(System.currentTimeMillis()).toString() + " " + userData.getUserName() + " " + userData.getDomain() + " " + userData.getPort() + " Ok");
+//
+                Intent intent = new Intent(getApplicationContext(), ServiceActivity.class);
+                intent.putExtra(ServiceActivity.PARAMETER_USER, userData.getUserName());
+                intent.putExtra(ServiceActivity.PARAMETER_SID, userData.getSid());
+                intent.putExtra(ServiceActivity.PARAMETER_EXPIRES, userData.getExpires());
                 startActivity(intent);
-            }else {
-                SharedPreferences sp = getSharedPreferences(userData.getUserName(),MODE_PRIVATE);
-                SharedPreferences.Editor editor= sp.edit();
-                editor.putString("USER",userData.getUserName());
-                editor.putString("SID","");
-                editor.putString("EXPIRES","");
+            } else {
+                SharedPreferences sp = getSharedPreferences(userData.getUserName(), MODE_PRIVATE);
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putString("USER", userData.getUserName());
+                editor.putString("SID", "");
+                editor.putString("EXPIRES", "");
                 editor.commit();
+                AccessLog.addRecord(getApplicationContext(), new Date(System.currentTimeMillis()).toString() + " " + userData.getUserName() + " " + userData.getDomain() + " " + userData.getPort() + " Error");
+//
                 Toast.makeText(getApplicationContext(), R.string.auth_error, Toast.LENGTH_LONG).show();
             }
 
         }
-
 
 
     }
