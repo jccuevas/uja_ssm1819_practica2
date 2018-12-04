@@ -18,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import data.Protocolo;
 import data.UserData;
 
 public class RemoteService extends Service {
@@ -85,24 +86,20 @@ public class RemoteService extends Service {
         }
     }
 
-    public interface Protocolo{
-        public UserData descarga(UserData userData);
 
-
-    }
-    public class UserLogin implements Runnable, Protocolo{
+    public class UserLogin implements Runnable, Protocolo {
         private static final String RESOURCE = "/ssmm/autentica.php";
 
         private static final int CODE_HTTP_OK = 200;
 
         @Override
         public void run() {
-            userData = descarga(userData);
+            userData = login(userData);
 
         }
 
         @Override
-        public UserData descarga(UserData userData) {
+        public UserData login(UserData userData) {
             UserData result = null;
             if (userData != null) {
 
