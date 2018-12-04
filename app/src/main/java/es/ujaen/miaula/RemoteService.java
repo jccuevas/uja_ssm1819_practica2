@@ -7,6 +7,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -21,11 +23,12 @@ import data.UserData;
 public class RemoteService extends Service {
     public static final String MESSAGE_SID = "message";
     UserData userData;
-    Handler handler = null;
+    Messenger messenger = null;
     public static final String PARAM_USER = "user";
     public static final String PARAM_PASS = "pass";
     public static final String PARAM_DOMAIN = "domain";
     public static final String PARAM_PORT = "port";
+
     public RemoteService() {
     }
 
@@ -38,42 +41,47 @@ public class RemoteService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
+        messenger = (Messenger) intent.getParcelableExtra("handler");
 
-        String user= intent.getExtras().getString(PARAM_USER);
-        String pass= intent.getExtras().getString(PARAM_PASS);
+        String user = intent.getExtras().getString(PARAM_USER);
+        String pass = intent.getExtras().getString(PARAM_PASS);
         String domain = intent.getExtras().getString(PARAM_DOMAIN);
         short port = intent.getExtras().getShort(PARAM_PORT);
-        userData=new UserData(user,pass,domain,port);
+        userData = new UserData(user, pass, domain, port);
 
-        handler = new Handler(Looper.getMainLooper()) {
-            @Override
-            public void handleMessage(Message inputMessage) {
-
-                switch (inputMessage.what){
-                    case 1:
-                        String message = inputMessage.getData().getString(RemoteService.MESSAGE_SID);
-                        Toast.makeText(getApplicationContext(),"HANDLER: "+message,Toast.LENGTH_SHORT).show();
-                        //Intent serviceractivity = new Intent(getApplicationContext(),ServiceActivity.class);
-                        //startActivity(intent);
-                        break;
-                    default:
-                        super.handleMessage(inputMessage);
-                }
-
-            }
-        };
+//        handler = new Handler(Looper.getMainLooper()) {
+//            @Override
+//            public void handleMessage(Message inputMessage) {
+//
+//                switch (inputMessage.what){
+//                    case 1:
+//                        String message = inputMessage.getData().getString(RemoteService.MESSAGE_SID);
+//                        Toast.makeText(getApplicationContext(),"HANDLER: "+message,Toast.LENGTH_SHORT).show();
+//                        break;
+//                    default:
+//                        super.handleMessage(inputMessage);
+//                }
+//
+//            }
+//        };
         new Thread(new UserLogin()).start();
         return START_NOT_STICKY;
     }
 
-    private void enviarMensaje(String datos) {
-        if (handler != null) {
-            Message mensaje = Message.obtain(handler, 1);
+    private void enviarMensaje(int tipo,String datos) {
+
+        if (messenger != null) {
+            Message mensaje = Message.obtain(null, tipo);
             Bundle datosmensaje = new Bundle();
             datosmensaje.putString(MESSAGE_SID, datos);
 
             mensaje.setData(datosmensaje);
-            mensaje.sendToTarget();
+            //mensaje.sendToTarget();
+            try {
+                messenger.send(mensaje);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -84,7 +92,7 @@ public class RemoteService extends Service {
 
         @Override
         public void run() {
-
+            Looper.prepare();
             UserData result = null;
             if (userData != null) {
 
@@ -115,8 +123,8 @@ public class RemoteService extends Service {
                                 if (parts.length == 2) {
                                     if (parts[1].startsWith("EXPIRES=")) {
                                         result = UserData.processSession(userData, parts[0], parts[1]);
-                                        Thread.sleep(10000);
-                                        enviarMensaje(result.getUserName() + " " + result.getSid());
+                                        //Thread.sleep(10000);
+                                        enviarMensaje(1,result.getUserName() + " " + result.getSid());
                                     }
                                 }
                             }
@@ -128,12 +136,13 @@ public class RemoteService extends Service {
                     connection.disconnect();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
+                    enviarMensaje(2,"URL INCORRECTA");
+
 
                 } catch (IOException ioex) {
                     ioex.printStackTrace();
+                    enviarMensaje(2,"URL FALLO EN LA CONEXIÓN");
 
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
 
             }
