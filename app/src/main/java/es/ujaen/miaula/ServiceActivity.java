@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Messenger;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -29,6 +30,8 @@ import data.ProtocolError;
 
 public class ServiceActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    public static final int IMAGENES[]={R.drawable.ic_accion_alarm,R.drawable.ic_action_log};
 
     //Parametros del Intent de la actividad
     public static final String PARAMETER_USER = "user";
@@ -61,6 +64,7 @@ public class ServiceActivity extends AppCompatActivity
 
                         break;
                     case 2:
+
                         Toast.makeText(getApplicationContext(), "ERROR: " + message, Toast.LENGTH_SHORT).show();
                         break;
                     default:
@@ -173,7 +177,7 @@ public class ServiceActivity extends AppCompatActivity
             Peticion peticion = new Peticion(s_user,new Date(System.currentTimeMillis()),list);
             Intent remote = new Intent(this,PartQueryService.class);
             remote.putExtra(PartQueryService.PARAM_QUERY,peticion.toString());
-
+            remote.putExtra("handler", new Messenger(handler));
             startService(remote);
 
 

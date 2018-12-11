@@ -20,6 +20,9 @@ import data.Protocolo;
 import data.UserData;
 
 public class PartQueryService extends Service {
+
+
+
     public static final String MESSAGE_SID = "message";
     private String query;
     private String domain;
@@ -114,8 +117,10 @@ public class PartQueryService extends Service {
                         BufferedReader br = new BufferedReader(is);
                         String line = "";
                         while ((line = br.readLine()) != null) {
+
                             result= line;
                         }
+
                         br.close();
                         is.close();
                     }
@@ -123,12 +128,12 @@ public class PartQueryService extends Service {
                     connection.disconnect();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
-                    enviarMensaje(2,"URL INCORRECTA");
+                    enviarMensaje(1,"URL INCORRECTA");
 
 
                 } catch (IOException ioex) {
                     ioex.printStackTrace();
-                    enviarMensaje(2,"URL FALLO EN LA CONEXIÓN");
+                    enviarMensaje(1,"URL FALLO EN LA CONEXIÓN");
 
                 }finally {
                     return result;
