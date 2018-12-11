@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="servicer_manufacturers" >
+        <item>Bosch</item>
+        <item>Monroe</item>
+        <item>Valeo</item>
+        <item>Varta</item>
+    </string-array>
+</resources>

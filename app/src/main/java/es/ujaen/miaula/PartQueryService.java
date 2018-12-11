@@ -3,9 +3,7 @@ package es.ujaen.miaula;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -21,16 +19,17 @@ import java.net.URL;
 import data.Protocolo;
 import data.UserData;
 
-public class RemoteService extends Service {
+public class PartQueryService extends Service {
     public static final String MESSAGE_SID = "message";
-    UserData userData;
+    private String query;
+    private String domain;
+    private short port=80;
     Messenger messenger = null;
-    public static final String PARAM_USER = "user";
-    public static final String PARAM_PASS = "pass";
     public static final String PARAM_DOMAIN = "domain";
+    public static final String PARAM_QUERY = "query";
     public static final String PARAM_PORT = "port";
 
-    public RemoteService() {
+    public PartQueryService() {
     }
 
 
@@ -44,30 +43,12 @@ public class RemoteService extends Service {
     public int onStartCommand(final Intent intent, int flags, int startId) {
         messenger = (Messenger) intent.getParcelableExtra("handler");
 
-        String user = intent.getExtras().getString(PARAM_USER);
-        String pass = intent.getExtras().getString(PARAM_PASS);
-        String domain = intent.getExtras().getString(PARAM_DOMAIN);
-        short port = intent.getExtras().getShort(PARAM_PORT);
-        userData = new UserData(user, pass, domain, port);
+        Toast.makeText(this,"Iniciando Servicio",Toast.LENGTH_SHORT).show();
+        query = intent.getExtras().getString(PARAM_QUERY);
+        domain = "192.168.66.253";//intent.getExtras().getString(PARAM_DOMAIN);
+        port = 80;//intent.getExtras().getShort(PARAM_PORT);
 
-//        handler = new Handler(Looper.getMainLooper()) {
-//            @Override
-//            public void handleMessage(Message inputMessage) {
-//
-//                switch (inputMessage.what){
-//                    case 1:
-//                        String message = inputMessage.getData().getString(RemoteService.MESSAGE_SID);
-//                        Toast.makeText(getApplicationContext(),"HANDLER: "+message,Toast.LENGTH_SHORT).show();
-//                        Intent serviceractivity = new Intent(getApplicationContext(),ServiceActivity.class);
-//                        startActivity(serviceractivity);
-//                        break;
-//                    default:
-//                        super.handleMessage(inputMessage);
-//                }
-//
-//            }
-//        };
-        new Thread(new UserLogin()).start();
+        new Thread(new RemoteQuery()).start();
         return START_NOT_STICKY;
     }
 
@@ -89,28 +70,34 @@ public class RemoteService extends Service {
     }
 
 
-    public class UserLogin implements Runnable, Protocolo {
-        private static final String RESOURCE = "/ssmm/autentica.php";
+    public class RemoteQuery implements Runnable, Protocolo {
+        private static final String RESOURCE = "/query";
 
         private static final int CODE_HTTP_OK = 200;
 
         @Override
         public void run() {
-            userData = login(userData);
+             String response = query(query);
+
+             enviarMensaje(1,response);
 
         }
 
         @Override
         public UserData login(UserData userData) {
-            UserData result = null;
-            if (userData != null) {
+            return null;
+        }
+
+        @Override
+        public String query(String myQuery) {
+            String result = null;
+            if (myQuery != null) {
 
 
                 //TODO hacer la conexión y la autenticación
 
-                String service = "http://" + userData.getDomain() + ":" +
-                        userData.getPort() + RESOURCE + "?" + PARAM_USER + "=" + userData.getUserName() + "&" +
-                        PARAM_PASS + "=" + userData.getPassword();
+                String service = "http://" + domain + ":" +
+                        port + RESOURCE + "?" + "query" + "=" + myQuery;
 
                 try {
                     URL urlService = new URL(service);
@@ -127,16 +114,7 @@ public class RemoteService extends Service {
                         BufferedReader br = new BufferedReader(is);
                         String line = "";
                         while ((line = br.readLine()) != null) {
-                            if (line.startsWith("SESSION-ID=")) {
-                                String parts[] = line.split("&");
-                                if (parts.length == 2) {
-                                    if (parts[1].startsWith("EXPIRES=")) {
-                                        result = UserData.processSession(userData, parts[0], parts[1]);
-                                        //Thread.sleep(10000);
-                                        enviarMensaje(1,result.getUserName() + " " + result.getSid());
-                                    }
-                                }
-                            }
+                            result= line;
                         }
                         br.close();
                         is.close();
@@ -158,11 +136,6 @@ public class RemoteService extends Service {
 
             }
             return result;
-        }
-
-        @Override
-        public String query(String myQuery) {
-            return null;
         }
     }
 }

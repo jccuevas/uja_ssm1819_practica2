@@ -73,7 +73,9 @@ public class MainActivity extends AppCompatActivity implements ItemFragment.OnLi
                     case 1:
 
                         Toast.makeText(getApplicationContext(), R.string.LOGIN_CORRECT, Toast.LENGTH_SHORT).show();
+
                         Intent serviceractivity = new Intent(getApplicationContext(), ServiceActivity.class);
+                        serviceractivity.putExtra(ServiceActivity.PARAMETER_USER,"user1");
                         startActivity(serviceractivity);
                         break;
                     case 2:

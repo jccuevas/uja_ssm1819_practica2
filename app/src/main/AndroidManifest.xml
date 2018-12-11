@@ -28,6 +28,10 @@
             android:name=".RemoteService"
             android:enabled="true"
             android:exported="false"></service>
+        <service
+            android:name=".PartQueryService"
+            android:enabled="true"
+            android:exported="false"></service>
     </application>
 
 </manifest>

@@ -33,4 +33,8 @@
     <string name="auth_correct">Autenticación correcta</string>
     <string name="auth_error">Error en la autenticación</string>
     <string name="LOGIN_CORRECT">Autenticado correctamente</string>
+    <string name="service_label_manufacturer">Fabricante</string>
+    <string name="service_label_part">Referenica pieza</string>
+    <string name="service_label_uds">Unidades</string>
+    <string name="service_button_query">Hacer pedido</string>
 </resources>

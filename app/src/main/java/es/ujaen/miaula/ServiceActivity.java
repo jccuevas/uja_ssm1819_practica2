@@ -2,6 +2,9 @@ package es.ujaen.miaula;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -13,7 +16,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.Spinner;
+
+import java.util.ArrayList;
+import java.util.Date;
+
+import data.Datos;
+import data.Peticion;
+import data.ProtocolError;
 
 public class ServiceActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -23,6 +35,13 @@ public class ServiceActivity extends AppCompatActivity
     public static final String PARAMETER_SID = "sid";
     public static final String PARAMETER_EXPIRES = "expired";
 
+    private String s_user;
+    private String s_pass;
+    private String s_domain;
+    private String s_port;
+
+    private Handler handler=null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,6 +49,26 @@ public class ServiceActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        handler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message inputMessage) {
+                String message = inputMessage.getData().getString(RemoteService.MESSAGE_SID);
+
+                switch (inputMessage.what) {
+                    case 1:
+
+                        Toast.makeText(getApplicationContext(),message, Toast.LENGTH_SHORT).show();
+
+                        break;
+                    case 2:
+                        Toast.makeText(getApplicationContext(), "ERROR: " + message, Toast.LENGTH_SHORT).show();
+                        break;
+                    default:
+                        super.handleMessage(inputMessage);
+                }
+
+            }
+        };
         //Solo para el botón flotante
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -52,10 +91,10 @@ public class ServiceActivity extends AppCompatActivity
 
         //Código práctica 1
         Intent intent = getIntent();
-        String s_user = intent.getStringExtra(PARAMETER_USER);
-        String s_pass = intent.getStringExtra("pass");;
-        String s_domain =intent.getStringExtra("domain"); ;
-        String s_port = intent.getStringExtra("port");;
+        s_user = intent.getStringExtra(PARAMETER_USER);
+        s_pass = intent.getStringExtra("pass");;
+        s_domain =intent.getStringExtra("domain"); ;
+        s_port = intent.getStringExtra("port");;
         Toast.makeText(this, s_user + " " + s_pass + " " + s_domain + " " + s_port, Toast.LENGTH_LONG).show();
 
 
@@ -116,5 +155,32 @@ public class ServiceActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void onSendQuery(View view) {
+        EditText edit_part = findViewById(R.id.service_part);
+        String part= edit_part.getEditableText().toString();
+        EditText edit_uds = findViewById(R.id.service_uds);
+        String uds= edit_uds.getEditableText().toString();
+        Spinner fab = findViewById(R.id.service_spinner_manufacturer);
+        int id= (int)fab.getSelectedItemId();
+
+        try {
+            Datos datos = new Datos(part,"10000000000"+String.valueOf(id),Integer.parseInt(uds));
+
+            ArrayList<Datos> list = new ArrayList<Datos>();
+            list.add(datos);
+            Peticion peticion = new Peticion(s_user,new Date(System.currentTimeMillis()),list);
+            Intent remote = new Intent(this,PartQueryService.class);
+            remote.putExtra(PartQueryService.PARAM_QUERY,peticion.toString());
+
+            startService(remote);
+
+
+        } catch (ProtocolError protocolError) {
+            protocolError.printStackTrace();
+        }
+
+
     }
 }
